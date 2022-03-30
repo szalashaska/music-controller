@@ -1,0 +1,10 @@
+frontend/node_modules
+api/__pycache__
+spotify/__pycache__
+frontend/__pycache__
+
+api/migrations
+spotify/migrations
+frontend/migrations
+
+db.sqlite3
