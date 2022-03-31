@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from .credentials import REDIRECT_URI, CLIENT_SECRET, CLIENT_ID
 from .util import *
 from api.models import Room
+from .models import Vote
+
 
 class AuthURL(APIView):
     def get(self, request, format=None):
@@ -98,6 +100,9 @@ class CurrentSong(APIView):
             name = artist.get('name')
             artist_string += name
 
+        # Count current votes
+        votes = Vote.objects.filter(room=room, song_id=song_id).count()
+
         # Prepere data to return
         song = {
             'title': title,
@@ -106,11 +111,27 @@ class CurrentSong(APIView):
             'time': progress,
             'image_url': album_cover,
             'is_playing': is_playing,
-            'votes': 0,
+            'votes': votes,
+            'votes_required': room.votes_to_skip,
             'id': song_id
         }
 
+        # Call update function
+        self.update_room_song(room, song_id)
+
         return Response(song, status=status.HTTP_200_OK)
+
+    def update_room_song(self, room, song_id):
+        current_song = room.current_song
+
+        # Update field, if song has changed
+        if current_song != song_id:
+            room.current_song = song_id
+            room.save(update_fields=['current_song'])
+
+            # Query database by room instance/foreign key
+            # Delete all votes, that have been placed since the song has changed
+            votes = Vote.objects.filter(room=room).delete
 
 
 class PauseSong(APIView):
@@ -137,4 +158,29 @@ class PlaySong(APIView):
             return Response({'Message': 'Song played.'}, status=status.HTTP_204_NO_CONTENT)
 
         return Response({'Error': 'Not llowed to temper with song'}, status=status.HTTP_403_FORBIDDEN)
+
+
+class SkipSong(APIView):
+    def post(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code).first()
+
+        # song_id... Can cause error, if you skip the song and next one is the same 
+        votes = Vote.objects.filter(room=room, song_id=room.current_song).count()
+        votes_needed = room.votes_to_skip
+
+        # Skip song if you are host of the room or amount of votes is enough to skip
+        if self.request.session.session_key == room.host or (votes + 1) >= votes_needed:
+            # Clear the votes before skip
+            votes.delete()
+            skip_song(room.host)
+            
+        # If you are guest, and votes are not enough
+        else:
+            # Create a vote
+            vote = Vote(user=self.request.session.session_key, room=room, song_id=room.current_song)
+            vote.save()
+        
+        return Response({'Message': 'Problem while skipping a song.'}, status=status.HTTP_204_NO_CONTENT)
+
 

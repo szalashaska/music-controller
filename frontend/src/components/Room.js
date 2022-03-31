@@ -32,11 +32,11 @@ const Room = ({ leaveRoomCallback }) => {
   // Assign room details, second argument of function is a dependency array, prevents the continuous loop
 
   useEffect(() => {
-    const checkAuthenticateSpotify = async () => {
+    const authenticateSpotify = async () => {
       try {
         const response = await fetch("/spotify/is-authenticated");
         const data = await response.json();
-        // Returns boolean
+        // Redirect user to login page, if not authenticated
         if (!data.status) {
           try {
             const response = await fetch("/spotify/get-auth-url");
@@ -47,6 +47,7 @@ const Room = ({ leaveRoomCallback }) => {
           } catch (err) {
             console.log(err);
           }
+          // Set users status as authenticated
         } else {
           setAuthState({
             ...authState,
@@ -58,10 +59,6 @@ const Room = ({ leaveRoomCallback }) => {
       }
     };
 
-    checkAuthenticateSpotify();
-  }, []);
-
-  useEffect(() => {
     const getRoomDetails = async () => {
       try {
         const response = await fetch(`/api/get-room?code=${roomCode}`);
@@ -73,13 +70,18 @@ const Room = ({ leaveRoomCallback }) => {
           navigate("/");
           return;
         }
-        //  If room does not exists return to homepage
+
         setRoomState({
           ...roomState,
           votesToSkip: data.votes_to_skip,
           guestCanPause: data.guest_can_pause,
           isHost: data.is_host,
         });
+
+        // Authenticate user, but only if he is a host of the room
+        if (data.is_host) {
+          authenticateSpotify();
+        }
         // 404 is error, that won't be catched by catch.
       } catch (err) {
         console.log(err);
@@ -191,7 +193,7 @@ const Room = ({ leaveRoomCallback }) => {
         ) : (
           <Grid item xs={12}>
             <Typography variant="h6" component="h6">
-              No music is currently played
+              No music is currently playing
             </Typography>
           </Grid>
         )}

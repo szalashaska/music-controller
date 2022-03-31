@@ -31,6 +31,15 @@ const MusicPlayer = ({ song }) => {
     fetch("/spotify/play", requestOptions);
   };
 
+  const skipSong = () => {
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    };
+    // We are using put method so we do not care about error
+    fetch("/spotify/skip", requestOptions);
+  };
+
   return (
     <Card>
       <Grid container alignItems="center">
@@ -52,8 +61,11 @@ const MusicPlayer = ({ song }) => {
             >
               {song.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
             </IconButton>
-            <IconButton>
+            <IconButton onClick={skipSong}>
               <SkipNextIcon />
+              <Typography component="h6" variant="h6">
+                {song.votes} / {song.votes_required}
+              </Typography>
             </IconButton>
           </div>
         </Grid>

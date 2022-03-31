@@ -33,27 +33,6 @@ const Homepage = () => {
     fetchData();
   }, []);
 
-  // // Fetching room code from server
-  // const componentDidMount = async () => {};
-
-  // // Async check if room exist, dependecny array used
-  // useEffect(async () => {
-  //   setRoomCode(await componentDidMount());
-  // }, []);
-
-  // // Fetching room code from server
-  // const componentDidMount = async () => {
-  //   try {
-  //     let request = await fetch("/api/user-in-room");
-  //     let data = await request.json();
-
-  //     return { code: data.code };
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
-  // Clear room method
   const clearRoomCode = () => {
     setRoomCode({
       code: null,
