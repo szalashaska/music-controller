@@ -16,17 +16,51 @@ const Room = ({ leaveRoomCallback }) => {
     guestCanPause: false,
     isHost: false,
     showSettings: false,
-    spotifyAuthenticated: false,
   });
 
   const [songState, setSongState] = useState({
     song: null,
   });
 
+  const [authState, setAuthState] = useState({
+    spotifyAuthenticated: false,
+  });
+
   // Get the room code from URL
   const roomCode = params.roomCode;
 
   // Assign room details, second argument of function is a dependency array, prevents the continuous loop
+
+  useEffect(() => {
+    const checkAuthenticateSpotify = async () => {
+      try {
+        const response = await fetch("/spotify/is-authenticated");
+        const data = await response.json();
+        // Returns boolean
+        if (!data.status) {
+          try {
+            const response = await fetch("/spotify/get-auth-url");
+            const data = await response.json();
+
+            // Native JavaScript method to redirect to url
+            window.location.replace(data.url);
+          } catch (err) {
+            console.log(err);
+          }
+        } else {
+          setAuthState({
+            ...authState,
+            spotifyAuthenticated: data.status,
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    checkAuthenticateSpotify();
+  }, []);
+
   useEffect(() => {
     const getRoomDetails = async () => {
       try {
@@ -55,70 +89,40 @@ const Room = ({ leaveRoomCallback }) => {
     getRoomDetails();
   }, []);
 
-  // useEffect(() => {
-  //   const checkAuthenticateSpotify = async () => {
-  //     try {
-  //       const response = await fetch("/spotify/is-authenticated");
-  //       const data = await response.json();
-  //       // Returns boolean
-  //       if (!data.status) {
-  //         try {
-  //           const response = await fetch("/spotify/get-auth-url");
-  //           const data = await response.json();
+  // In useEffect using return statement is similar to ComponentWillUnmount method
 
-  //           // Native JavaScript method to redirect to url
-  //           window.location.replace(data.url);
-  //         } catch (err) {
-  //           console.log(err);
-  //         }
-  //       } else {
-  //         setRoomState({
-  //           ...roomState,
-  //           spotifyAuthenticated: data.status,
-  //         });
-  //       }
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Wait for songs information
+      const getCurrentSong = async () => {
+        try {
+          const response = await fetch("/spotify/current-song");
 
-  //   checkAuthenticateSpotify();
-  // }, []);
+          // If we did not get correct response return empty object
+          if (response.status === 204) {
+            setSongState({
+              song: null,
+            });
+            return;
+          }
+          const data = await response.json();
 
-  // // In useEffect using return statement is similar to ComponentWillUnmount method
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     // Wait for songs information
-  //     const getCurrentSong = async () => {
-  //       try {
-  //         const response = await fetch("/spotify/current-song");
+          // Update state
+          setSongState({
+            song: data,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      };
+      getCurrentSong();
+    }, 1500);
 
-  //         // If we did not get correct response return empty object
-  //         if (!response.ok) {
-  //           return {};
-  //         }
-  //         const data = await response.json();
-
-  //         // To do...
-  //         if (data === undefined) {
-  //           console.log("Empty song response, need to be taken care off");
-  //         }
-  //         // Update state
-  //         setSongState({
-  //           song: data,
-  //         });
-  //       } catch (err) {
-  //         console.log(err);
-  //       }
-  //     };
-  //     getCurrentSong();
-  //   }, 1000);
-
-  //   // Clear interval when finished
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, []);
+    // Clear interval when finished
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   const leaveButtonPressed = async () => {
     const requestOptions = {
@@ -182,7 +186,15 @@ const Room = ({ leaveRoomCallback }) => {
         </Typography>
       </Grid>
       <div className="center">
-        {songState.song ? <MusicPlayer song={songState.song} /> : null}
+        {songState.song ? (
+          <MusicPlayer song={songState.song} />
+        ) : (
+          <Grid item xs={12}>
+            <Typography variant="h6" component="h6">
+              No music is currently played
+            </Typography>
+          </Grid>
+        )}
       </div>
 
       {/* Settings Button, only when you are the host of the room */}
@@ -219,7 +231,7 @@ const Room = ({ leaveRoomCallback }) => {
       </Grid>
       <Grid item xs={12}>
         <Typography variant="h6" component="h6">
-          Spotify authenticated: {roomState.spotifyAuthenticated.toString()}
+          Spotify authenticated: {authState.spotifyAuthenticated.toString()}
         </Typography>
       </Grid>
     </Grid>

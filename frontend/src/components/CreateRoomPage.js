@@ -84,7 +84,7 @@ const CreateRoomPage = ({
     try {
       let data = await fetch("/api/update-room", requestOptions);
       let response = await data.json();
-      console.log(response);
+
       if (data.ok) {
         setUpdateMsg({
           ...updateMsg,
