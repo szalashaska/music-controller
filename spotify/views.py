@@ -166,11 +166,14 @@ class SkipSong(APIView):
         room = Room.objects.filter(code=room_code).first()
 
         # song_id... Can cause error, if you skip the song and next one is the same 
-        votes = Vote.objects.filter(room=room, song_id=room.current_song).count()
+        votes = Vote.objects.filter(room=room, song_id=room.current_song)
         votes_needed = room.votes_to_skip
+        
+        if votes.filter(user=self.request.session.session_key).first():
+            return Response({'Message': 'You already voted'}, status=status.HTTP_204_NO_CONTENT)
 
         # Skip song if you are host of the room or amount of votes is enough to skip
-        if self.request.session.session_key == room.host or (votes + 1) >= votes_needed:
+        if self.request.session.session_key == room.host or (votes.count() + 1) >= votes_needed:
             # Clear the votes before skip
             votes.delete()
             skip_song(room.host)
@@ -178,8 +181,9 @@ class SkipSong(APIView):
         # If you are guest, and votes are not enough
         else:
             # Create a vote
+        
             vote = Vote(user=self.request.session.session_key, room=room, song_id=room.current_song)
-            vote.save()
+            vote.save()        
         
         return Response({'Message': 'Problem while skipping a song.'}, status=status.HTTP_204_NO_CONTENT)
 

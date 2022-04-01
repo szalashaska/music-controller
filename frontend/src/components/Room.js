@@ -212,7 +212,7 @@ const Room = ({ leaveRoomCallback }) => {
           Leave Room
         </Button>
       </Grid>
-
+      {/*
       <Grid item xs={12}>
         <h2> Debug info: </h2>
       </Grid>
@@ -236,6 +236,7 @@ const Room = ({ leaveRoomCallback }) => {
           Spotify authenticated: {authState.spotifyAuthenticated.toString()}
         </Typography>
       </Grid>
+    */}
     </Grid>
   );
 };

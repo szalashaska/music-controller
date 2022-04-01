@@ -11,7 +11,7 @@ import { Grid, Button, ButtonGroup, Typography } from "@material-ui/core";
 import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
 import Room from "./Room";
-// import Header from "./Header";
+import Info from "./Info";
 
 const Homepage = () => {
   const [roomCode, setRoomCode] = useState({
@@ -53,6 +53,9 @@ const Homepage = () => {
             <Button color="primary" to="/join" component={Link}>
               Join a Room
             </Button>
+            <Button color="default" to="/info" component={Link}>
+              Info
+            </Button>
             <Button color="secondary" to="/create" component={Link}>
               Create a Room
             </Button>
@@ -77,6 +80,7 @@ const Homepage = () => {
           }
         />
         <Route path="/join" element={<RoomJoinPage />} />
+        <Route path="/info" element={<Info />} />
         <Route path="/create" element={<CreateRoomPage />} />
         <Route
           path="/room/:roomCode"

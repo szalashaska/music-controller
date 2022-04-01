@@ -63,11 +63,13 @@ const MusicPlayer = ({ song }) => {
             </IconButton>
             <IconButton onClick={skipSong}>
               <SkipNextIcon />
-              <Typography component="h6" variant="h6">
-                {song.votes} / {song.votes_required}
-              </Typography>
             </IconButton>
           </div>
+          <Grid item align="center" xs={8}>
+            <Typography color="textSecondary" variant="subtitle1">
+              To skip: {song.votes} / {song.votes_required}
+            </Typography>
+          </Grid>
         </Grid>
       </Grid>
       <LinearProgress variant="determinate" value={songProgress} />
