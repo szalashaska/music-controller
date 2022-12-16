@@ -6,5 +6,6 @@ frontend/__pycache__
 api/migrations
 spotify/migrations
 frontend/migrations
+python_env
 
-db.sqlite3
+.env
